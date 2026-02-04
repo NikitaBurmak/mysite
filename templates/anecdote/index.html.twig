@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+    <div class="main-container">
+
+        <div class="sidebar">
+            <h3 class="text-lg font-bold mb-4">Topics of jokes</h3>
+            <div id="topicsContainer" class="flex flex-col gap-2"></div>
+        </div>
+
+        <div class="content">
+            <table class="min-w-full bg-white rounded-lg shadow overflow-hidden">
+                <thead class="bg-gray-200">
+                <tr>
+                    <th class="px-6 py-3 text-left text-gray-700">ID</th>
+                    <th class="px-6 py-3 text-left text-gray-700">Joke</th>
+                    <th class="px-6 py-3 text-left text-gray-700">Action</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                {% for anecdote in anecdotes %}
+                    <tr>
+                        <td class="px-6 py-4">{{ anecdote.id }}</td>
+                        <td class="px-6 py-4">{{ anecdote.text }}</td>
+                        <td class="px-6 py-4 space-x-2">
+                            {% if app.user %}
+                                <button type="button"
+                                        class="like-button px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                        data-url="/anecdote/{{ anecdote.id }}/like"
+                                        data-count="{{ anecdote.votesSum }}">
+                                    ❤️ {{ anecdote.votesSum }}
+                                </button>
+                            {% else %}
+                                <button
+                                    class="show-login like-button px-3 py-1 bg-gray-400 text-white rounded cursor-not-allowed">
+                                    ❤️ {{ anecdote.votesSum }}
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">There are no jokes yet 😅</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="mt-4">
+                {% if app.user %}
+                    <button id="addAnecdoteButton" class="add-btn">Add a joke</button>
+                {% else %}
+                    <button class="show-login add-btn">Add a joke</button>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    {% include 'partials/_auth_modal.html.twig' %}
+    {% include 'partials/_add_anecdote_modal.html.twig' %}
+{% endblock %}

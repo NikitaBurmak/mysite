@@ -1,0 +1,131 @@
+<div id="authModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+
+        <div class="tabs">
+            <button id="tab-login" class="active">Войти</button>
+            <button id="tab-register">Регистрация</button>
+        </div>
+
+        <div id="login-form" class="tab-content active auth-form">
+            <form id="loginForm" method="post" action="{{ path('app_login') }}" data-url="{{ path('app_login') }}">
+                <input type="email" name="email" placeholder="Email" required>
+                <div class="password-wrapper">
+                    <input type="password" name="password" placeholder="Password" autocomplete="off" required id="loginPassword">
+                    <button type="button" class="show-password-btn" aria-label="Show password">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                             viewBox="0 0 16 16">
+                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
+                            <path d="M8 5a3 3 0 100 6 3 3 0 000-6z"/>
+                        </svg>
+                    </button>
+                </div>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <div class="remember-container">
+                    <input type="checkbox" id="rememberMeLogin" name="_remember_me">
+                    <label for="rememberMeLogin">Запомнить меня</label>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+        </div>
+
+        <div id="register-form" class="tab-content auth-form">
+            <form id="registerForm" method="post" action="{{ path('app_register') }}"
+                  data-url="{{ path('app_register') }}">
+                <input type="email" name="email" placeholder="Email" required>
+                <div class="password-wrapper">
+                    <input type="password" name="password" placeholder="Password" autocomplete="off" required id="registerPassword">
+                    <button type="button" class="show-password-btn" aria-label="Show password">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                             viewBox="0 0 16 16">
+                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
+                            <path d="M8 5a3 3 0 100 6 3 3 0 000-6z"/>
+                        </svg>
+                    </button>
+                </div>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <div class="remember-container">
+                    <input type="checkbox" id="rememberMeRegister" name="_remember_me">
+                    <label for="rememberMeRegister">Запомнить меня</label>
+                </div>
+                <button type="submit" class="auth-btn">Register</button>
+            </form>
+        </div>
+
+        <div class="social-login">
+            <p class="social-login-text">Or login with</p>
+            <div class="social-buttons">
+                <button class="social-btn google-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+                         alt="Google Logo"/>
+                    Login with Google
+                </button>
+                <button class="social-btn facebook-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"
+                         alt="Facebook Logo"/>
+                    Login with Facebook
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const authModal = document.getElementById('authModal');
+        const loginContainer = document.getElementById('login-form');
+        const registerContainer = document.getElementById('register-form');
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+
+        const clearAuthForms = () => {
+            loginForm?.reset();
+            registerForm?.reset();
+        };
+
+        loginContainer.style.display = 'block';
+        registerContainer.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+
+        tabLogin.addEventListener('click', () => {
+            loginContainer.style.display = 'block';
+            registerContainer.style.display = 'none';
+            tabLogin.classList.add('active');
+            tabRegister.classList.remove('active');
+        });
+
+        tabRegister.addEventListener('click', () => {
+            loginContainer.style.display = 'none';
+            registerContainer.style.display = 'block';
+            tabRegister.classList.add('active');
+            tabLogin.classList.remove('active');
+        });
+
+        authModal.querySelectorAll('.close').forEach(btn => {
+            btn.addEventListener('click', () => authModal.style.display = 'none');
+        });
+
+        document.querySelectorAll('.show-login').forEach(btn => {
+            btn.addEventListener('click', () => authModal.style.display = 'block');
+        });
+    });
+    document.querySelectorAll('.password-wrapper').forEach(wrapper => {
+        const btn = wrapper.querySelector('.show-password-btn');
+        const input = wrapper.querySelector('input[type="password"], input[type="text"]');
+
+        btn.addEventListener('click', () => {
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        });
+    });
+    document.querySelectorAll('.social-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const provider = btn.classList.contains('google-btn') ? 'Google' : 'Facebook';
+            alert(`Login with ${provider} clicked! (подключить OAuth здесь)`);
+        });
+    });
+</script>

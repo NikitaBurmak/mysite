@@ -1,0 +1,39 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Админка{% endblock %}
+
+{% block body %}
+    <h1>Админка: управление анекдотами</h1>
+
+    <table border="1" cellpadding="5">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Текст</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for anecdote in anecdotes %}
+            <tr data-id="{{ anecdote.id }}">
+                <td>{{ loop.index }}</td>
+                <td><textarea class="edit-text">{{ anecdote.text }}</textarea></td>
+                <td>
+                    <button type="button" class="save-btn">Save</button>
+                    <button type="button" class="delete-btn">Delete</button>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">Нет анекдотов</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/admin.js') }}"></script>
+{% endblock %}

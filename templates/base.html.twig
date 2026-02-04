@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Anecdotes{% endblock %}</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="icon" href="{{ asset('anecdots.ico') }}" type="image/x-icon">
+</head>
+<body>
+<header>
+    <h3>Anecdotes</h3>
+    {% if app.user %}
+        <div id="userAvatar" class="user-menu">
+            <div class="user-avatar">👤</div>
+            <div class="dropdown">
+                <a href="{{ path('app_logout') }}" id="logoutButton">Exit</a>
+            </div>
+        </div>
+    {% else %}
+        <button id="loginButton">Entrance</button>
+    {% endif %}
+</header>
+
+{% block body %}{% endblock %}
+
+<footer>
+    &copy; {{ "now"|date("Y") }} Anecdotes. All rights reserved.
+</footer>
+
+{% block javascripts %}
+    <script>
+        window.IS_LOGGED_IN = false;
+        window.CURRENT_USER = null;
+    </script>
+    <script src="{{ asset('js/app.js') }}"></script>
+{% endblock %}
+</body>
+</html>

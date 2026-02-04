@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+    php:
+        build: ./php
+        container_name: php
+        volumes:
+            - ./:/var/www/html
+            - php-sessions:/var/lib/php/sessions
+        networks:
+            - app-network
+        depends_on:
+            - postgres
+            - redis
+            - rabbitmq
+
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        networks:
+            - app-network
+    redis:
+        image: redis:7-alpine
+        container_name: redis
+        ports:
+            - "6379:6379"
+        networks:
+            - app-network
+
+    nginx:
+        image: nginx:alpine
+        container_name: nginx
+        ports:
+            - "8080:80"
+        volumes:
+            - ./:/var/www/html
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
+        networks:
+            - app-network
+
+    postgres:
+        image: postgres:15
+        container_name: postgres
+        restart: always
+        environment:
+            POSTGRES_DB: myanecdotes
+            POSTGRES_USER: Nikita
+            POSTGRES_PASSWORD: 2008
+        ports:
+            - "5432:5432"
+        volumes:
+            - db-data:/var/lib/postgresql/data
+        networks:
+            - app-network
+
+volumes:
+    db-data:
+    php-sessions:
+
+networks:
+    app-network:

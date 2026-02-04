@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Admin Panel {% endblock %}</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="icon" href="{{ asset('anecdots.ico') }}" type="image/x-icon">
+</head>
+<body>
+<header>
+    <h3>Admin Panel</h3>
+</header>
+
+<main class="admin-container">
+    {% block body %}{% endblock %}
+</main>
+
+{% block javascripts %}
+    <script src="{{ asset('js/app.js') }}"></script>
+{% endblock %}
+</body>
+</html>
