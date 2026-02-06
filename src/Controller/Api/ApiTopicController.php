@@ -10,7 +10,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 #[Route('/api')]
-class TopicApiController extends AbstractController
+class ApiTopicController extends AbstractController
 {
     #[Route('/topics', name: 'api_topics', methods: ['GET'])]
     public function topics(TopicRepository $topicRepository, CacheInterface $cache): JsonResponse

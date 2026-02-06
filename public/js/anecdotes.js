@@ -1,44 +1,71 @@
-//рендер таблицы, лайки, добавление анекдота
 export function initAnecdotes() {
-    let anecdotesByTopic = {};
+    const tableBody = document.querySelector('table tbody');
 
-    const renderTableByTopic = () => {
-        const tbody = document.querySelector('.content table tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        const list = anecdotesByTopic[currentTopic] || [];
-        if (!list.length) return tbody.innerHTML = '<tr><td colspan="3">Нет анекдотов</td></tr>';
-
-        list.sort((a, b) => a.id - b.id);
-        list.forEach((a, idx) => {
-            const tr = document.createElement('tr');
-            tr.dataset.topic = a.topic || 'All topics';
-            tr.innerHTML = `
-                <td>${idx + 1}</td>
-                <td>${a.text}</td>
-                <td>
-                    <button class="like-button" data-url="/anecdote/${a.id}/like" data-count="${a.votesSum || 0}">❤️ ${a.votesSum || 0}</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    };
-
-    (async function loadAnecdotes() {
+    async function loadAnecdotes(topicId = null) {
         try {
-            const res = await fetch('/api/anecdotes', { credentials: 'same-origin' });
-            const data = await res.json();
+            const url = topicId ? `/api/anecdotes?topic=${topicId}` : '/api/anecdotes';
+            const res = await fetch(url, { credentials: 'same-origin' });
+            const anecdotes = await res.json();
 
-            anecdotesByTopic = {};
-            data.forEach(a => {
-                const topic = a.topic || 'All topics';
-                if (!anecdotesByTopic[topic]) anecdotesByTopic[topic] = [];
-                anecdotesByTopic[topic].push(a);
+            tableBody.innerHTML = '';
+
+            if (!anecdotes.length) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">No jokes yet 😅</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            anecdotes.forEach(a => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4">${a.id}</td>
+                    <td class="px-6 py-4">${a.text}</td>
+                    <td class="px-6 py-4 space-x-2">
+                        ${window.IS_LOGGED_IN ? `
+                            <button type="button"
+                                    class="like-button px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                    data-id="${a.id}"
+                                    data-count="${a.votesSum}">
+                                ❤️ ${a.votesSum}
+                            </button>`
+                    : `
+                            <button class="show-login like-button px-3 py-1 bg-gray-400 text-white rounded cursor-not-allowed">
+                                ❤️ ${a.votesSum}
+                            </button>`}
+                    </td>
+                `;
+                tableBody.appendChild(tr);
             });
 
-            renderTableByTopic();
+            document.querySelectorAll('.like-button').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!window.IS_LOGGED_IN) return;
+                    const anecdoteId = btn.dataset.id;
+                    try {
+                        const res = await fetch(`/anecdote/${anecdoteId}/like`, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {'X-Requested-With': 'XMLHttpRequest'}
+                        });
+                        const data = await res.json();
+                        if (data.success) btn.textContent = `❤️ ${data.votesSum}`;
+                    } catch (err) {
+                        console.error(err);
+                    }
+                });
+            });
+
         } catch (err) {
             console.error(err);
         }
-    })();
+    }
+
+    loadAnecdotes();
+
+    document.addEventListener('topicChanged', e => {
+        loadAnecdotes(e.detail);
+    });
 }

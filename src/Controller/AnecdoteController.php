@@ -12,8 +12,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use PhpAmqpLib\Connection\AMQPStreamConnection;
-use PhpAmqpLib\Message\AMQPMessage;
 
 class AnecdoteController extends AbstractController
 {
@@ -64,33 +62,6 @@ class AnecdoteController extends AbstractController
         $em->persist($anecdote);
         $em->flush();
 
-        try {
-            $connection = new AMQPStreamConnection('rabbitmq', 5672, 'guest', 'guest');
-            $channel = $connection->channel();
-
-            $channel->exchange_declare('anecdote_topic', 'topic', false, true, false);
-            $channel->queue_declare('test_queue', false, true, false, false);
-            $channel->queue_bind('test_queue', 'anecdote_topic', 'anecdote.create');
-
-            $data = [
-                'text' => $anecdote->getText(),
-                'id' => $anecdote->getId(),
-                'topic' => $anecdote->getTopic()->getName(),
-                'user' => $user->getId()
-            ];
-
-            $msg = new AMQPMessage(json_encode($data), [
-                'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT
-            ]);
-            $channel->basic_publish($msg, 'anecdote_topic', 'anecdote.create');
-
-            $channel->close();
-            $connection->close();
-
-        } catch (\Throwable $e) {
-            file_put_contents(__DIR__ . '/../../var/log/rabbit.log', $e->getMessage() . "\n", FILE_APPEND);
-        }
-
         return $this->json([
             'success' => true,
             'id' => $anecdote->getId(),
@@ -98,21 +69,5 @@ class AnecdoteController extends AbstractController
             'topic' => $anecdote->getTopic()->getName(),
             'votesSum' => $anecdote->getVotesSum(),
         ]);
-    }
-
-    #[Route('/api/anecdotes', name: 'api_anecdotes', methods: ['GET'])]
-    public function apiAnecdotes(EntityManagerInterface $em): JsonResponse
-    {
-        $anecdotes = $em->getRepository(Anecdote::class)->findAll();
-        $data = [];
-        foreach ($anecdotes as $a) {
-            $data[] = [
-                'id' => $a->getId(),
-                'text' => $a->getText(),
-                'topic' => $a->getTopic()->getName(),
-                'votesSum' => $a->getVotesSum(),
-            ];
-        }
-        return $this->json($data);
     }
 }
