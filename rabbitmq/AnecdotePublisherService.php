@@ -3,7 +3,7 @@
 use App\Entity\Anecdote;
 use Doctrine\ORM\EntityManagerInterface;
 
-class AnecdoteService
+class AnecdotePublisherService
 {
     public function __construct(
         private EntityManagerInterface $em,

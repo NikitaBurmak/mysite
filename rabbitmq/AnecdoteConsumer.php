@@ -1,37 +1,51 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
 
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use App\Service\RabbitMQService;
+use PhpAmqpLib\Message\AMQPMessage;
+use Psr\Log\LoggerInterface;
 
-$service = new RabbitMQService();
-$connection = $service->getConnection();
-$channel = $service->setupChannel($connection);
+class AnecdoteConsumer
+{
+    public function __construct(
+        private RabbitMQService          $rabbit,
+        private AnecdotePublisherService $anecdoteService,
+        private LoggerInterface          $logger,
+    ) {}
+    public function run() : void
+    {
+        $connection = $this->rabbit->getConnection();
+        $channel = $this->rabbit->setupChannel($connection);
 
-echo " [*] Waiting for messages.\n";
+        $this->logger->info("Anecdote consumer started");
 
-$channel->basic_consume('test_queue', '', false, false, false, false, function ($msg) {
-    try {
-        $data = json_decode($msg->body, true);
-        if (!is_array($data) || !array_key_exists('text', $data)) {
-            echo "Invalid message: " . $msg->body . "\n";
-            $msg->getChannel()->basic_nack($msg->delivery_info['delivery_tag'], false, true);
-            return;
+        $channel->basic_consume(
+        $this->rabbit->getQueue(),
+        '' ,
+            false,
+            false,
+            false,
+            false,
+            fn (AMQPMessage $msg) => $this->handle($msg)
+        );
+        while ($channel->is_open()) {
+            $channel->wait();
         }
-        echo "Received anecdote: " . $data['text'] . "\n";
-        $msg->getChannel()->basic_ack($msg->delivery_info['delivery_tag']);
-    } catch (\Throwable $e) {
-        echo 'Error procesing message: ' . $e->getMessage() . "\n";
-        $msg->getChannel()->basic_nack($msg->delivery_info['delivery_tag'], false, true);
     }
-});
+    private function handle(AMQPMessage $msg) : void
+    {
+        try {
+            $data = json_decode($msg->getBody(), true);
 
-while ($channel->is_open()) {
-    try {
-        $channel->wait();
-    } catch (\PhpAmqpLib\Exception\AMQPTimeoutException $e) {
-    } catch (\Throwable $e) {
-        echo "Consumer error: " . $e->getMessage() . "\n";
-        sleep(1);
+            $this->anecdoteService->createFromMessage($data);
+
+            $msg->ack();
+        } catch (\Throwable $e) {
+            $this->logger->error('Consumer error', [
+                'error' => $e->getMessage(),
+                'message' => $msg->getBody()
+            ]);
+            $msg->nack(false, true);
+        }
     }
 }
