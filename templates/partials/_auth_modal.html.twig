@@ -1,7 +1,7 @@
 <div id="authModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-
+        <script src="{{ asset('public/js/auth.php') }}"></script>
         <div class="tabs">
             <button id="tab-login" class="active">Войти</button>
             <button id="tab-register">Регистрация</button>
@@ -65,67 +65,8 @@
                          alt="Facebook Logo"/>
                     Login with Facebook
                 </button>
+
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const authModal = document.getElementById('authModal');
-        const loginContainer = document.getElementById('login-form');
-        const registerContainer = document.getElementById('register-form');
-        const tabLogin = document.getElementById('tab-login');
-        const tabRegister = document.getElementById('tab-register');
-
-        const clearAuthForms = () => {
-            loginForm?.reset();
-            registerForm?.reset();
-        };
-
-        loginContainer.style.display = 'block';
-        registerContainer.style.display = 'none';
-        tabLogin.classList.add('active');
-        tabRegister.classList.remove('active');
-
-        tabLogin.addEventListener('click', () => {
-            loginContainer.style.display = 'block';
-            registerContainer.style.display = 'none';
-            tabLogin.classList.add('active');
-            tabRegister.classList.remove('active');
-        });
-
-        tabRegister.addEventListener('click', () => {
-            loginContainer.style.display = 'none';
-            registerContainer.style.display = 'block';
-            tabRegister.classList.add('active');
-            tabLogin.classList.remove('active');
-        });
-
-        authModal.querySelectorAll('.close').forEach(btn => {
-            btn.addEventListener('click', () => authModal.style.display = 'none');
-        });
-
-        document.querySelectorAll('.show-login').forEach(btn => {
-            btn.addEventListener('click', () => authModal.style.display = 'block');
-        });
-    });
-    document.querySelectorAll('.password-wrapper').forEach(wrapper => {
-        const btn = wrapper.querySelector('.show-password-btn');
-        const input = wrapper.querySelector('input[type="password"], input[type="text"]');
-
-        btn.addEventListener('click', () => {
-            if (input.type === 'password') {
-                input.type = 'text';
-            } else {
-                input.type = 'password';
-            }
-        });
-    });
-    document.querySelectorAll('.social-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const provider = btn.classList.contains('google-btn') ? 'Google' : 'Facebook';
-            alert(`Login with ${provider} clicked! (подключить OAuth здесь)`);
-        });
-    });
-</script>

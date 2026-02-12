@@ -1,9 +1,14 @@
 <div id="addAnecdoteModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <form id="addAnecdoteForm" data-url="{{ path('anecdote_add') }}">
-            <textarea name="text" placeholder="Ваш анекдот" required></textarea>
-            <button type="submit">Добавить</button>
+
+        <form id="addAnecdoteForm">
+            <textarea name="text"
+                      placeholder="Ваш анекдот"
+                      required></textarea>
+            <button type="submit">
+                Добавить
+            </button>
         </form>
     </div>
 </div>

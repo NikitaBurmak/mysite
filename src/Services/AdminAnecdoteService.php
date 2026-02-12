@@ -1,11 +1,11 @@
 <?php
 
-namespace App\services;
+namespace App\Services;
 
 use App\Entity\Anecdote;
 use Doctrine\ORM\EntityManagerInterface;
 
-class AnecdoteService
+class AdminAnecdoteService
 {
     public function __construct(
         private EntityManagerInterface $em

@@ -19,6 +19,7 @@
     {% else %}
         <button id="loginButton">Entrance</button>
     {% endif %}
+    <meta name="csrf-token" content="{{ csrf_token('vote') }}">
 </header>
 
 {% block body %}{% endblock %}
