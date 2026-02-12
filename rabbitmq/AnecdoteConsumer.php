@@ -1,16 +1,12 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
-error_reporting(E_ALL & ~E_DEPRECATED);
-
 use PhpAmqpLib\Connection\AMQPStreamConnection;
+use App\Service\RabbitMQService;
 
-$connection = new AMQPStreamConnection('rabbitmq', 5672, 'guest', 'guest');
-$channel = $connection->channel();
-
-$channel->exchange_declare('anecdote_topic', 'topic', false, true, false);
-$channel->queue_declare('test_queue', false, true, false, false);
-$channel->queue_bind('test_queue', 'anecdote_topic', 'anecdote.create');
+$service = new RabbitMQService();
+$connection = $service->getConnection();
+$channel = $service->setupChannel($connection);
 
 echo " [*] Waiting for messages.\n";
 
