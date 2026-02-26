@@ -30,6 +30,10 @@ class AdminAnecdoteService
         $this->em->remove($anecdote);
         $this->em->flush();
     }
+    public function getAll(): array
+    {
+        return $this->em->getRepository(Anecdote::class)->findAll();
+    }
 
 
 }

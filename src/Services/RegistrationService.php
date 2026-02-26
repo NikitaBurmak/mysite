@@ -8,22 +8,26 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Repository\UserRepository;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Bundle\SecurityBundle\Security;
+
 
 class RegistrationService
 {
     public function __construct(
         private EntityManagerInterface      $em,
         private UserRepository              $userRepository,
-        private UserPasswordHasherInterface $hasher
+        private UserPasswordHasherInterface $hasher,
+        private Security                    $security
     )
     {
     }
 
     public function register(Request $request): JsonResponse
     {
-        $email = $request->request->get('email');
-        $password = $request->request->get('password');
+        $data = json_decode($request->getContent(), true);
+
+        $email = $data['email'] ?? null;
+        $password = $data['password'] ?? null;
 
         if (!$email || !$password) {
             return new JsonResponse(['success' => false, 'error' => 'Email и пароль обязательны'], 400);
@@ -41,9 +45,7 @@ class RegistrationService
         $this->em->persist($user);
         $this->em->flush();
 
-        $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
-// Сохраняем токен в сессию
-        $request->getSession()->set('_security_main', serialize($token));
+        $this->security->login($user);
 
         return new JsonResponse([
             'success' => true,
@@ -53,5 +55,27 @@ class RegistrationService
                 'id' => $user->getId(),
             ]
         ]);
+    }
+
+    public function login(string $email, string $password): array
+    {
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (!$user) {
+            throw new \Exception('Wrong login');
+        }
+
+        if (!$this->hasher->isPasswordValid($user, $password)) {
+            throw new \Exception('Wrong login');
+        }
+
+        $this->security->login($user);
+
+        return [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'roles' => $user->getRoles()
+        ];
+
     }
 }

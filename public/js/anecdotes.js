@@ -4,14 +4,24 @@ export async function initAnecdotes() {
     const addModal = document.getElementById('addAnecdoteModal');
     const addForm = document.getElementById('addAnecdoteForm');
 
+    let currentTopicId = null;
+
     async function loadAnecdotes(topicId = null) {
         try {
             const url = topicId ? `/api/anecdotes?topic=${topicId}` : '/api/anecdotes';
-            const res = await fetch(url, { credentials: 'same-origin' });
-            const anecdotes = await res.json();
+            const res = await fetch(url, {credentials: 'same-origin'});
+
+            const text = await res.text();
+
+            let anecdotes;
+            try {
+                anecdotes = JSON.parse(text);
+            } catch {
+                anecdotes = [];
+                console.error('Не удалось распарсить JSON');
+            }
 
             tableBody.innerHTML = '';
-
             if (!anecdotes.length) {
                 tableBody.innerHTML = `
                     <tr>
@@ -29,7 +39,8 @@ export async function initAnecdotes() {
                     <td class="px-6 py-4">
                         <button type="button"
                                 class="like-button px-3 py-1 rounded transition ${window.IS_LOGGED_IN ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-400 text-white cursor-not-allowed show-login'}"
-                                data-id="${a.id}">
+                                data-id="${a.id}"
+                                data-count="${a.votesSum}">
                             ❤️ ${a.votesSum}
                         </button>
                     </td>
@@ -38,14 +49,15 @@ export async function initAnecdotes() {
             });
 
             setupLikeButtons();
+
         } catch (err) {
-            console.error(err);
+            console.error('Ошибка при загрузке анекдотов:', err);
         }
     }
 
     function setupLikeButtons() {
         document.querySelectorAll('.like-button').forEach(btn => {
-            btn.addEventListener('click', async e => {
+            btn.onclick = async (e) => {
                 e.preventDefault();
                 if (!window.IS_LOGGED_IN) {
                     authModal.style.display = 'block';
@@ -53,85 +65,36 @@ export async function initAnecdotes() {
                 }
 
                 const anecdoteId = btn.dataset.id;
-                if (!anecdoteId) return;
 
                 try {
-                    const token = document.querySelector('meta[name="csrf-token"]').content;
-
                     const res = await fetch(`/anecdote/${anecdoteId}/like`, {
                         method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': token   // вот этот заголовок!
-                        }
+                        credentials: 'same-origin'
                     });
+                    if (!res.ok) {
+                        if (res.status === 401) {
+                            authModal.style.display = 'block';
+                            return;
+                        }
+                        const errData = await res.json();
+                        alert(errData.error || 'Ошибка лайка');
+                        return;
+                    }
+
                     const data = await res.json();
-                    if (data.requireLogin) authModal.style.display = 'block';
-                    else if (data.votes !== undefined) btn.textContent = `❤️ ${data.votes}`;
+                    btn.textContent = `❤️ ${data.votes}`;
                 } catch (err) {
-                    console.error(err);
+                    console.error('Ошибка при лайке:', err);
+                    alert('Ошибка сети при лайке');
                 }
-            });
+            };
         });
     }
 
-    function setupAddButton() {
-        const addBtn = document.getElementById('addAnecdoteButton') || document.querySelector('.add-btn.show-login');
-        if (!addBtn) return;
-
-        addBtn.addEventListener('click', e => {
-            e.preventDefault();
-            if (!window.IS_LOGGED_IN) authModal.style.display = 'block';
-            else addModal.style.display = 'block';
-        });
-    }
-
-    addForm?.addEventListener('submit', async e => {
-        e.preventDefault();
-        const formData = new FormData(addForm);
-        try {
-            const res = await fetch(addForm.dataset.url, {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const data = await res.json();
-            if (data.success) {
-                addModal.style.display = 'none';
-                addForm.reset();
-                loadAnecdotes(window.currentTopicId || null);
-            } else if (data.requireLogin) {
-                addModal.style.display = 'none';
-                authModal.style.display = 'block';
-            } else {
-                alert(data.error || 'Ошибка при добавлении анекдота');
-            }
-        } catch (err) {
-            console.error(err);
-        }
+    document.addEventListener('topicChanged', e => {
+        currentTopicId = e.detail;
+        loadAnecdotes(currentTopicId);
     });
 
     loadAnecdotes();
-
-    document.addEventListener('topicChanged', e => {
-        loadAnecdotes(e.detail);
-    });
-
-    setupAddButton();
-
-    document
-        .getElementById('addAnecdoteForm')
-        ?.addEventListener('submit', async (e) => {
-            e.preventDefault()
-
-            const text = e.target.text.value
-
-            await fetch('/api/anecdotes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            })
-        })
 }

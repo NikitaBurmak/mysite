@@ -4,34 +4,32 @@ namespace App\Controller;
 
 use App\Entity\Anecdote;
 use App\Services\VoteService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Csrf\CsrfToken;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class VoteController extends AbstractController
 {
-    public function __construct(private VoteService $voteService)
+    private VoteService $voteService;
+    private EntityManagerInterface $em;
+
+    public function __construct(VoteService $voteService, EntityManagerInterface $em)
     {
+        $this->voteService = $voteService;
+        $this->em = $em;
     }
 
     #[Route('/anecdote/{id}/like', name: 'anecdote_like', methods: ['POST'])]
-    public function like(
-        Anecdote                  $anecdote,
-        Request                   $request,
-        CsrfTokenManagerInterface $csrfManager
-    ): JsonResponse
+    public function like(Anecdote $anecdote): JsonResponse
     {
-        $token = $request->headers->get('X-CSRF-TOKEN');
-        if (!$csrfManager->isTokenValid(new CsrfToken('vote', $token))) {
-            return $this->json(['requireLogin' => true], 403);
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['requireLogin' => true], 401);
         }
 
-        $user = $this->getUser();
-        if (!$user) return $this->json(['requireLogin' => true], 403);
-
         $count = $this->voteService->likeAnecdote($anecdote, $user);
+        $this->em->flush();
 
         return $this->json(['votes' => $count]);
     }

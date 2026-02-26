@@ -2,79 +2,77 @@
 
 namespace App\Controller;
 
-use App\Services\AuthService;
+use App\Entity\User;
 use App\Services\RegistrationService;
 use App\Services\AnecdoteApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\Anecdote;
-use App\Entity\Topic;
-use App\Repository\TopicRepository;
+use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class SecurityController extends AbstractController
 {
-
     public function __construct(
         private RegistrationService $registrationService,
-        private AuthService         $authService,
         private AnecdoteApiService  $anecdoteService
     )
     {
     }
 
     #[Route('/', name: 'home')]
-    public function home(): Response
+    public function home(?int $topicId = null): Response
     {
-        $anecdotes = $this->anecdoteService->getAllAnecdotes();
+        $anecdotes = $topicId
+            ? $this->anecdoteService->getAnecdotesByTopic($topicId)
+            : $this->anecdoteService->getAllAnecdotes();
+
         $topics = $this->anecdoteService->getAllTopics();
 
         return $this->render('anecdote/index.html.twig', [
             'anecdotes' => $anecdotes,
             'topics' => $topics,
+            'currentTopicId' => $topicId,
         ]);
     }
 
-    #[Route('/login', name: 'app_login', methods: ['POST'])]
-    public function login(Request $request, CsrfTokenManagerInterface $csrfManager): JsonResponse
+    #[Route('/api/login', name: 'api_login', methods: ['POST'])]
+    public function login(Request $request): JsonResponse
     {
-        $csrfToken = $request->request->get('_csrf_token');
-        if (!$csrfManager->isTokenValid(new CsrfToken('authenticate', $csrfToken))) {
-            return $this->json(['success' => false, 'error' => 'CSRF токен невалиден'], 400);
-        }
+        $data = json_decode($request->getContent(), true);
+        try {
+            $user = $this->registrationService->login($data['email'] ?? '', $data['password'] ?? '');
 
-        return $this->authService->login($request);
+            $redirect = in_array('ROLE_ADMIN', $user['roles'], true) ? '/admin' : '/';
+
+            return $this->json(['success' => true, 'user' => $user, 'redirect' => $redirect]);
+        } catch (\Exception) {
+            return $this->json(['success' => false, 'error' => 'Неверный логин'], 401);
+        }
     }
 
     #[Route('/register', name: 'app_register', methods: ['POST'])]
-    public function register(Request $request, CsrfTokenManagerInterface $csrfManager): JsonResponse
+    public function register(Request $request): JsonResponse
     {
-        $csrfToken = $request->request->get('_csrf_token');
-        if (!$csrfManager->isTokenValid(new CsrfToken('authenticate', $csrfToken))) {
-            return $this->json(['success' => false, 'error' => 'CSRF токен невалиден'], 400);
-        }
-
         return $this->registrationService->register($request);
-    }
-
-    #[Route('/login', name: 'app_login_get', methods: ['GET'])]
-    public function loginPage(): Response
-    {
-        return $this->redirectToRoute('home');
     }
 
     #[Route('/api/current_user', name: 'api_current_user')]
     public function currentUser(): JsonResponse
     {
         $user = $this->getUser();
-        if (!$user) return $this->json(null);
+        if (!$user) {
+            return new JsonResponse(null);
+        }
 
-        return $this->json([
+        return new JsonResponse([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
             'roles' => $user->getRoles(),

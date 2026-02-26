@@ -1,0 +1,17 @@
+<div id="addTopicModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+
+        <form id="addTopicForm" data-url="{{ path('topic_add') }}">
+            <input type="text"
+                   name="name"
+                   placeholder="Название темы (макс 2 слова)"
+                   required
+                   maxlength="50">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('add_topic') }}">
+            <button type="submit">
+                Добавить тему
+            </button>
+        </form>
+    </div>
+</div>

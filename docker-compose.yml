@@ -22,6 +22,20 @@ services:
             - "15672:15672"
         networks:
             - app-network
+
+    consumer:
+        build: ./php
+        container_name: consumer
+        volumes:
+            - ./:/var/www/html
+        depends_on:
+            - rabbitmq
+            - postgres
+        networks:
+            - app-network
+        restart: unless-stopped
+        entrypoint: ["sh", "-c", "sleep 10 && php bin/console app:consume-anecdotes"]
+
     redis:
         image: redis:7-alpine
         container_name: redis
