@@ -1,0 +1,29 @@
+{% if anecdotes is empty %}
+    <p>Нет анекдотов</p>
+{% else %}
+
+    {% for anecdote in anecdotes %}
+
+        <div class="anecdote" data-id="{{ anecdote.id }}">
+
+            <div class="text">
+                {{ anecdote.text }}
+            </div>
+
+            <div class="meta">
+
+                <span class="topic">
+                    {{ anecdote.topic.name }}
+                </span>
+
+                <span class="votes">
+                    ❤️ {{ anecdote.votesSum }}
+                </span>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+{% endif %}

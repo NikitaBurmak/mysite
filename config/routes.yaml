@@ -4,3 +4,16 @@ controllers:
 
 app_logout:
     path: /logout
+
+app_login:
+    path: /login
+    methods: [GET, POST]
+
+login_check:
+    path: /login_check
+    methods: [POST]
+
+topic_add:
+    path: /topic/add
+    controller: App\Controller\TopicController::add
+    methods: [POST]

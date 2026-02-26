@@ -63,7 +63,6 @@ class Topic
     public function removeAnecdote(Anecdote $anecdote): static
     {
         if ($this->anecdotes->removeElement($anecdote)) {
-            // set the owning side to null (unless already changed)
             if ($anecdote->getTopic() === $this) {
                 $anecdote->setTopic(null);
             }

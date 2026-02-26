@@ -19,6 +19,7 @@
     {% else %}
         <button id="loginButton">Entrance</button>
     {% endif %}
+    <meta name="csrf-token" content="{{ csrf_token('vote') }}">
 </header>
 
 {% block body %}{% endblock %}
@@ -29,10 +30,11 @@
 
 {% block javascripts %}
     <script>
-        window.IS_LOGGED_IN = false;
-        window.CURRENT_USER = null;
+        window.IS_LOGGED_IN = {{ app.user ? 'true' : 'false' }};
+        window.CURRENT_USER = {{ app.user ? app.user.id : 'null' }};
     </script>
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/main.js') }}" type="module"></script>
+    <script src="{{ asset('js/admin/admin.js') }}" type="module"></script>
 {% endblock %}
 </body>
 </html>

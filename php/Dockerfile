@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libonig-dev \
     libpq-dev \
-    libpq-dev \
     libxml2-dev \
     pkg-config \
     && pecl install redis \

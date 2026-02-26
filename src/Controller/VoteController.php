@@ -3,8 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Anecdote;
-use App\Entity\Vote;
-use App\Repository\VoteRepository;
+use App\Services\VoteService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -12,31 +11,25 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class VoteController extends AbstractController
 {
+    private VoteService $voteService;
+    private EntityManagerInterface $em;
+
+    public function __construct(VoteService $voteService, EntityManagerInterface $em)
+    {
+        $this->voteService = $voteService;
+        $this->em = $em;
+    }
+
     #[Route('/anecdote/{id}/like', name: 'anecdote_like', methods: ['POST'])]
-    public function like(Anecdote $anecdote, EntityManagerInterface $em, VoteRepository $voteRepo): JsonResponse
+    public function like(Anecdote $anecdote): JsonResponse
     {
         $user = $this->getUser();
         if (!$user) {
-            return $this->json(['requireLogin' => true], 403);
+            return $this->json(['requireLogin' => true], 401);
         }
 
-        $existingVote = $voteRepo->findOneBy([
-            'anecdote' => $anecdote,
-            'user' => $user
-        ]);
-
-        if ($existingVote) {
-            $count = $voteRepo->count(['anecdote' => $anecdote]);
-            return $this->json(['votes' => $count]);
-        }
-
-        $vote = new Vote();
-        $vote->setUser($user);
-        $vote->setAnecdote($anecdote);
-        $em->persist($vote);
-        $em->flush();
-
-        $count = $voteRepo->count(['anecdote' => $anecdote]);
+        $count = $this->voteService->likeAnecdote($anecdote, $user);
+        $this->em->flush();
 
         return $this->json(['votes' => $count]);
     }

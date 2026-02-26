@@ -4,11 +4,27 @@ services:
         autoconfigure: true
         public: false
 
+    Symfony\Component\Security\Core\Security: '@security.helper'
+
     App\:
         resource: '../src/*'
         exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
 
     App\Controller\:
         resource: '../src/Controller'
-        tags: ['controller.service_arguments']
+        tags: [ 'controller.service_arguments' ]
         public: true
+
+    App\Command\:
+        resource: '../src/Command'
+        tags: [ 'console.command' ]
+
+    App\Services\RabbitMQ\RabbitMQService:
+        arguments:
+            $host: '%env(RABBITMQ_HOST)%'
+            $port: '%env(int:RABBITMQ_PORT)%'
+            $user: '%env(RABBITMQ_USER)%'
+            $password: '%env(RABBITMQ_PASS)%'
+            $exchange: '%env(RABBITMQ_EXCHANGE)%'
+            $queue: '%env(RABBITMQ_QUEUE)%'
+            $routingKey: '%env(RABBITMQ_ROUTING_KEY)%'

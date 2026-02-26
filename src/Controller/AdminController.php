@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Anecdote;
+use App\Services\AdminAnecdoteService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,57 +15,46 @@ class AdminController extends AbstractController
 {
 
     public function __construct(
-        private EntityManagerInterface $em,
+        private AdminAnecdoteService $service,
     )
     {
     }
-
     #[Route('/admin', name: 'admin_dashboard')]
     public function dashboard(): Response
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
-        $anecdotes = $this->em->getRepository(Anecdote::class)->findAll();
+        $anecdotes = $this->service->getAll();
 
-        return $this->render('admin/dashboard.html.twig', [
-            'anecdotes' => $anecdotes,
-        ]);
+        return $this->render('admin/dashboard.html.twig', compact('anecdotes'));
     }
 
     #[Route('/admin/anecdote/save', name: 'admin_anecdote_save', methods: ['POST'])]
-    public function save(Request $request, EntityManagerInterface $em): JsonResponse
+    public function save(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
-
-        $id = $request->request->get('id');
-        $text = $request->request->get('text');
-
-        if (!$id || !$text) {
-            return $this->json(['success' => false, 'error' => 'Не переданы данные']);
+        try {
+            $this->service->updateText(
+                (int)$request->request->get('id'),
+                $request->request->get('text')
+            );
+            return $this->json(['success' => true]);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()
+            ]);
         }
-
-        $anecdote = $em->getRepository(Anecdote::class)->find($id);
-        if (!$anecdote) {
-            return $this->json(['success' => false, 'error' => 'Анекдот не найден']);
-        }
-
-        $anecdote->setText($text);
-        $em->flush();
-
-        return $this->json(['success' => true]);
     }
 
     #[Route('/admin/anecdote/delete/{id}', name: 'admin_anecdote_delete', methods: ['POST'])]
-    public function delete(int $id, EntityManagerInterface $em): JsonResponse
+    public function delete(int $id): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
-            $anecdote = $em->getRepository(Anecdote::class)->find($id);
-            if (!$anecdote) {
-                return $this->json(['success' => false, 'error' => 'Анекдот не найден']);
-            }
-        $this->em->remove($anecdote);
-        $this->em->flush();
 
-        return $this->json(['success' => true]);
+        try {
+            $this->service->delete($id);
+            return $this->json(['success' => true]);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false]);
+        }
     }
 }
