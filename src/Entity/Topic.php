@@ -18,7 +18,7 @@ class Topic
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\OneToMany(mappedBy: 'topic', targetEntity: Anecdote::class)]
+    #[ORM\ManyToMany(targetEntity: Anecdote::class, mappedBy: 'topics')]
     private Collection $anecdotes;
 
     public function __construct()
@@ -54,7 +54,7 @@ class Topic
     {
         if (!$this->anecdotes->contains($anecdote)) {
             $this->anecdotes->add($anecdote);
-            $anecdote->setTopic($this);
+            $anecdote->addTopic($this);
         }
 
         return $this;
@@ -63,9 +63,7 @@ class Topic
     public function removeAnecdote(Anecdote $anecdote): static
     {
         if ($this->anecdotes->removeElement($anecdote)) {
-            if ($anecdote->getTopic() === $this) {
-                $anecdote->setTopic(null);
-            }
+            $anecdote->removeTopic($this);
         }
 
         return $this;

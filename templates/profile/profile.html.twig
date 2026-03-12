@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block body %}
+<div class="profile-page">
+    <div class="profile-header">
+        <div class="profile-avatar" id="avatarWrapper">
+            {% if app.user.avatarPath %}
+                <img src="{{ asset(app.user.avatarPath) }}" alt="avatar" id="avatarImage">
+            {% else %}
+                <div class="default-avatar" id="avatarImage">👤</div>
+            {% endif %}
+            <div class="avatar-overlay" id="avatarOverlay">
+                <span>📷</span>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" hidden>
+        </div>
+        <div class="profile-nickname" id="nicknameWrapper">
+            {% if app.user.nickname %}
+                <span id="nicknameText">{{ app.user.nickname }}</span>
+            {% else %}
+                <span id="nicknameText" class="no-nickname">Создай никнейм</span>
+            {% endif %}
+            <span class="nickname-edit-icon" id="nicknameEditIcon">✏️</span>
+            <div class="nickname-edit-form" id="nicknameEditForm" style="display: none;">
+                <input type="text" id="nicknameInput" placeholder="Введи никнейм" value="{{ app.user.nickname ?? '' }}">
+                <button id="nicknameSaveBtn">Сохранить</button>
+                <button id="nicknameCancelBtn" class="cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-container">
+        <div class="profile-content">
+            <h3 class="section-title">Авторизация</h3>
+
+            <form id="emailForm">
+                <label>Email:</label>
+                <input type="email" name="email" value="{{ app.user.email }}"/>
+                <button type="submit">Сменить email</button>
+            </form>
+
+            <form id="passwordForm">
+                <label>Старый пароль:</label>
+                <input type="password" name="oldPassword"/>
+                <label>Новый пароль:</label>
+                <input type="password" name="newPassword"/>
+                <button type="submit">Сменить пароль</button>
+            </form>
+
+            <a href="{{ path('app_logout') }}" class="logout-btn">Выйти</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

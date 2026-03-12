@@ -3,6 +3,7 @@
 namespace App\Services\RabbitMQ;
 
 use App\Entity\Anecdote;
+use App\Entity\Topic;
 use App\Repository\TopicRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,8 +25,7 @@ class AnecdoteConsumer
         $connection = $this->rabbit->getConnection();
         $channel = $this->rabbit->setupChannel($connection);
 
-        $channel->basic_consume(
-            $this->rabbit->getQueue(),
+        $channel->basic_consume($this->rabbit->getQueue(),
             '',
             false,
             false,
@@ -55,35 +55,31 @@ class AnecdoteConsumer
                 return;
             }
 
-            $topic = null;
+            $topicIds = [];
             if (!empty($data['topicId'])) {
-                $topic = $this->topicRepository->find($data['topicId']);
+                $topicIds[] = $data['topicId'];
+            }
+            if (!empty($data['topicIds']) && is_array($data['topicIds'])) {
+                $topicIds = array_merge($topicIds, $data['topicIds']);
             }
 
-            $allTopics = $this->topicRepository->findOneBy(['name' => 'All Topics']);
-
-            if ($topic) {
-                $anecdote = new Anecdote();
-                $anecdote->setText($data['text']);
-                $anecdote->setUser($user);
-                $anecdote->setTopic($topic);
-                $this->em->persist($anecdote);
-
-                if ($allTopics && $topic->getId() !== $allTopics->getId()) {
-                    $anecdoteAll = new Anecdote();
-                    $anecdoteAll->setText($data['text']);
-                    $anecdoteAll->setUser($user);
-                    $anecdoteAll->setTopic($allTopics);
-                    $this->em->persist($anecdoteAll);
+            $topics = [];
+            foreach ($topicIds as $topicId) {
+                $topic = $this->topicRepository->find($topicId);
+                if ($topic) {
+                    $topics[] = $topic;
                 }
-            } elseif ($allTopics) {
-                $anecdote = new Anecdote();
-                $anecdote->setText($data['text']);
-                $anecdote->setUser($user);
-                $anecdote->setTopic($allTopics);
-                $this->em->persist($anecdote);
             }
 
+            $anecdote = new Anecdote();
+            $anecdote->setText($data['text']);
+            $anecdote->setUser($user);
+
+            foreach ($topics as $topic) {
+                $anecdote->addTopic($topic);
+            }
+
+            $this->em->persist($anecdote);
             $this->em->flush();
             $msg->ack();
         } catch (\Throwable $e) {

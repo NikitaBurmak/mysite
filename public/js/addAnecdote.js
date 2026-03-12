@@ -1,13 +1,14 @@
 export function initAddAnecdote() {
     const addModal = document.getElementById('addAnecdoteModal');
+    if (!addModal) return;
+
     const addForm = document.getElementById('addAnecdoteForm');
     const authModal = document.getElementById('authModal');
     const addBtn = document.getElementById('addAnecdoteButton');
 
     const addTopicModal = document.getElementById('addTopicModal');
     const addTopicForm = document.getElementById('addTopicForm');
-    const addTopicBtn = document.getElementById('addTopicBtn');
-    const topicsContainer = document.getElementById('topicsContainer');
+    const addTopicBtn = document.getElementById('openAddTopicModal');
 
     addModal.querySelector('.close')?.addEventListener('click', () => addModal.style.display = 'none');
     authModal.querySelector('.close')?.addEventListener('click', () => authModal.style.display = 'none');
@@ -35,14 +36,39 @@ export function initAddAnecdote() {
         e.preventDefault();
 
         const text = addForm.querySelector('textarea[name="text"]').value;
-        const topicId = addForm.querySelector('select[name="topic_id"]')?.value || null;
-        const currentTopicId = window.currentTopicId ?? null;
+
+        const topicCheckboxes = addForm.querySelectorAll('input[name="topicIds[]"]:checked');
+        const topicIds = Array.from(topicCheckboxes).map(cb => parseInt(cb.value));
+
+        if (topicIds.length === 0) {
+            alert('Пожалуйста, выберите хотя бы одну тему');
+            return;
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div style="text-align: center;">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Добавляю анекдот...</div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        let previousLatestId = 0;
+        try {
+            const latestRes = await fetch('/api/anecdotes/latest', {credentials: 'same-origin'});
+            const latestData = await latestRes.json();
+            previousLatestId = latestData.latestId || 0;
+        } catch (e) {
+            console.warn('Could not get latest ID, using fallback');
+        }
 
         try {
             const res = await fetch(addForm.dataset.url, {
                 method: 'POST',
                 credentials: 'same-origin',
-                body: JSON.stringify({text, topic_id: topicId, currentTopicId}),
+                body: JSON.stringify({text, topicIds}),
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -54,12 +80,39 @@ export function initAddAnecdote() {
             if (data.success) {
                 addModal.style.display = 'none';
                 addForm.reset();
-                document.dispatchEvent(new CustomEvent('topicChanged', {detail: currentTopicId}));
+
+                overlay.querySelector('.loading-text').textContent = 'Ожидание обработки...';
+
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const latestRes = await fetch('/api/anecdotes/latest', {credentials: 'same-origin'});
+                        const latestData = await latestRes.json();
+                        const currentLatestId = latestData.latestId || 0;
+
+                        if (currentLatestId > previousLatestId) {
+                            clearInterval(pollInterval);
+                            overlay.remove();
+                            const selectedTopics = window.getSelectedTopics ? window.getSelectedTopics() : [];
+                            document.dispatchEvent(new CustomEvent('topicsChanged', {detail: selectedTopics}));
+                        }
+                    } catch (e) {
+                        console.warn('Polling error:', e);
+                    }
+                }, 500);
+
+                setTimeout(() => {
+                    clearInterval(pollInterval);
+                    overlay.remove();
+                    const selectedTopics = window.getSelectedTopics ? window.getSelectedTopics() : [];
+                    document.dispatchEvent(new CustomEvent('topicsChanged', {detail: selectedTopics}));
+                }, 10000);
             } else {
+                overlay.remove();
                 alert(data.error || 'Ошибка при добавлении анекдота');
             }
         } catch (err) {
             console.error(err);
+            overlay.remove();
         }
     });
 
@@ -93,28 +146,7 @@ export function initAddAnecdote() {
             if (data.success) {
                 addTopicModal.style.display = 'none';
                 addTopicForm.reset();
-
-                if (topicsContainer) {
-                    const newTopicBtn = document.createElement('button');
-                    newTopicBtn.classList.add('topic-link', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-600');
-                    newTopicBtn.dataset.topicId = data.id;
-                    newTopicBtn.textContent = data.name;
-
-                    newTopicBtn.addEventListener('click', () => {
-                        window.currentTopicId = data.id;
-                        document.dispatchEvent(new CustomEvent('topicChanged', {detail: data.id}));
-                    });
-
-                    topicsContainer.appendChild(newTopicBtn);
-                }
-
-                const topicSelect = addForm.querySelector('select[name="topic_id"]');
-                if (topicSelect) {
-                    const newOption = document.createElement('option');
-                    newOption.value = data.id;
-                    newOption.textContent = data.name;
-                    topicSelect.appendChild(newOption);
-                }
+                location.reload();
             } else {
                 alert(data.error || 'Ошибка при добавлении темы');
             }

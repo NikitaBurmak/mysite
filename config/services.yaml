@@ -19,6 +19,10 @@ services:
         resource: '../src/Command'
         tags: [ 'console.command' ]
 
+    App\Services\ProfileService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     App\Services\RabbitMQ\RabbitMQService:
         arguments:
             $host: '%env(RABBITMQ_HOST)%'

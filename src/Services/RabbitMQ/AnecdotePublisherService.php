@@ -12,7 +12,7 @@ class AnecdotePublisherService
     {
     }
 
-    public function publish(string $text, int $userId, ?int $topicId = null): void
+    public function publish(string $text, int $userId, ?array $topicIds = null): void
     {
         $connection = $this->rabbit->getConnection();
         $channel = $this->rabbit->setupChannel($connection);
@@ -20,7 +20,7 @@ class AnecdotePublisherService
         $data = [
             'text' => $text,
             'userId' => $userId,
-            'topicId' => $topicId,
+            'topicIds' => $topicIds ?? [],
         ];
 
         $msg = new AMQPMessage(

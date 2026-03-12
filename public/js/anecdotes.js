@@ -1,17 +1,27 @@
 export async function initAnecdotes() {
     const tableBody = document.querySelector('table tbody');
+    if (!tableBody) return;
+
     const authModal = document.getElementById('authModal');
-    const addModal = document.getElementById('addAnecdoteModal');
-    const addForm = document.getElementById('addAnecdoteForm');
 
-    let currentTopicId = null;
+    let selectedTopicIds = [];
 
-    async function loadAnecdotes(topicId = null) {
+    async function loadAnecdotes(topicIds = []) {
         try {
-            const url = topicId ? `/api/anecdotes?topic=${topicId}` : '/api/anecdotes';
+            let url = '/api/anecdotes';
+
+            if (topicIds.length > 0) {
+                const params = topicIds.map(id => `topics[]=${id}`).join('&');
+                url = `/api/anecdotes?${params}`;
+                console.log('Loading anecdotes from:', url);
+            } else {
+                console.log('Loading all anecdotes');
+            }
+
             const res = await fetch(url, {credentials: 'same-origin'});
 
             const text = await res.text();
+            console.log('Response:', text);
 
             let anecdotes;
             try {
@@ -91,9 +101,10 @@ export async function initAnecdotes() {
         });
     }
 
-    document.addEventListener('topicChanged', e => {
-        currentTopicId = e.detail;
-        loadAnecdotes(currentTopicId);
+    document.addEventListener('topicsChanged', e => {
+        console.log('topicsChanged event received:', e.detail);
+        selectedTopicIds = e.detail || [];
+        loadAnecdotes(selectedTopicIds);
     });
 
     loadAnecdotes();

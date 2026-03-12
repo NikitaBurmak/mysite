@@ -19,6 +19,7 @@ class AdminController extends AbstractController
     )
     {
     }
+
     #[Route('/admin', name: 'admin_dashboard')]
     public function dashboard(): Response
     {

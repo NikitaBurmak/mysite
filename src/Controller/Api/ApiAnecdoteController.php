@@ -2,9 +2,8 @@
 
 namespace App\Controller\Api;
 
-use App\Entity\Anecdote;
+use App\Services\AnecdoteService;
 use App\Services\RabbitMQ\AnecdotePublisherService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,24 +12,22 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api')]
 class ApiAnecdoteController extends AbstractController
 {
+    public function __construct(
+        private AnecdoteService $anecdoteService
+    ) {}
+
     #[Route('/anecdotes', name: 'api_anecdotes', methods: ['GET'])]
-    public function index(EntityManagerInterface $em, Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $topicId = $request->query->get('topic');
+        $topicIds = $request->query->all('topics');
 
-        $anecdotes = $topicId
-            ? $em->getRepository(Anecdote::class)->findBy(['topic' => $topicId])
-            : $em->getRepository(Anecdote::class)->findAll();
-
-        $data = [];
-        foreach ($anecdotes as $a) {
-            $data[] = [
-                'id' => $a->getId(),
-                'text' => $a->getText(),
-                'topic' => $a->getTopic()?->getName(),
-                'votesSum' => $a->getVotesSum(),
-            ];
+        if (!empty($topicIds)) {
+            $topicIds = array_values(array_map(fn($id) => (int)$id, $topicIds));
         }
+
+        $anecdotes = $this->anecdoteService->getAnecdotes($topicIds);
+
+        $data = array_map(fn($a) => $a->toArray(), $anecdotes);
 
         return $this->json($data);
     }
@@ -44,23 +41,32 @@ class ApiAnecdoteController extends AbstractController
             return $this->json(['success' => false, 'error' => 'Unauthorized'], 401);
         }
 
-        // Support both JSON and form data
+        $topicIds = [];
+
         $contentType = $request->headers->get('Content-Type');
-        if (str_contains($contentType, 'application/json')) {
+        if ($contentType && str_contains($contentType, 'application/json')) {
             $body = json_decode($request->getContent(), true);
             $text = $body['text'] ?? null;
-            $topicId = isset($body['topicId']) ? (int)$body['topicId'] : null;
+            $topicIds = array_map(fn($id) => (int)$id, $body['topicIds'] ?? []);
         } else {
             $text = $request->request->get('text');
-            $topicId = $request->request->getInt('topicId') ?: null;
+            $topicIds = $request->request->all('topicIds');
         }
 
         if (!$text) {
             return $this->json(['success' => false, 'error' => 'Missing text'], 400);
         }
 
-        $publisher->publish($text, $user->getId(), $topicId);
+        $publisher->publish($text, $user->getId(), $topicIds);
 
         return $this->json(['success' => true, 'message' => 'Anecdote sent to queue']);
+    }
+
+    #[Route('/anecdotes/latest', name: 'api_anecdotes_latest', methods: ['GET'])]
+    public function getLatestId(): JsonResponse
+    {
+        $latestId = $this->anecdoteService->getLatestId();
+
+        return $this->json(['latestId' => $latestId]);
     }
 }

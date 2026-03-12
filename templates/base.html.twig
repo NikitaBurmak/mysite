@@ -4,25 +4,31 @@
     <meta charset="UTF-8">
     <title>{% block title %}Anecdotes{% endblock %}</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">
     <link rel="icon" href="{{ asset('anecdots.ico') }}" type="image/x-icon">
 </head>
 <body>
 <header>
     <h3>Anecdotes</h3>
     {% if app.user %}
-        <div id="userAvatar" class="user-menu">
-            <div class="user-avatar">👤</div>
-            <div class="dropdown">
-                <a href="{{ path('app_logout') }}" id="logoutButton">Exit</a>
+        <a href="{{ path('profile') }}" class="user-avatar-link">
+            <div class="user-avatar">
+                {% if app.user.avatarPath %}
+                    <img src="{{ asset(app.user.avatarPath) }}" alt="avatar">
+                {% else %}
+                    👤
+                {% endif %}
             </div>
-        </div>
+        </a>
     {% else %}
         <button id="loginButton">Entrance</button>
     {% endif %}
     <meta name="csrf-token" content="{{ csrf_token('vote') }}">
 </header>
 
-{% block body %}{% endblock %}
+<main>
+    {% block body %}{% endblock %}
+</main>
 
 <footer>
     &copy; {{ "now"|date("Y") }} Anecdotes. All rights reserved.
@@ -33,8 +39,8 @@
         window.IS_LOGGED_IN = {{ app.user ? 'true' : 'false' }};
         window.CURRENT_USER = {{ app.user ? app.user.id : 'null' }};
     </script>
-    <script src="{{ asset('js/main.js') }}" type="module"></script>
-    <script src="{{ asset('js/admin/admin.js') }}" type="module"></script>
+    <script type="module" src="{{ asset('js/profile.js') }}"></script>
+    <script type="module" src="{{ asset('js/main.js') }}"></script>
 {% endblock %}
 </body>
 </html>

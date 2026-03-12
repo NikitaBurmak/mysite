@@ -1,0 +1,208 @@
+/* Profile Header */
+.profile-page .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Avatar with overlay */
+.profile-page .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.profile-page .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-page .default-avatar {
+    font-size: 40px;
+    line-height: 1;
+}
+
+.profile-page .avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+}
+
+.profile-page .avatar-overlay span {
+    font-size: 28px;
+    filter: brightness(2);
+}
+
+.profile-page .profile-avatar:hover .avatar-overlay {
+    opacity: 1;
+}
+
+/* Nickname */
+.profile-page .profile-nickname {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.profile-page .no-nickname {
+    color: #999;
+    font-style: italic;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.profile-page .no-nickname:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.profile-page .nickname-edit-icon {
+    cursor: pointer;
+    font-size: 16px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.profile-page .nickname-edit-icon:hover {
+    opacity: 1;
+}
+
+.profile-page .nickname-edit-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-page .nickname-edit-form input {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    width: 200px;
+}
+
+.profile-page .nickname-edit-form button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+}
+
+.profile-page .nickname-edit-form button#nicknameSaveBtn {
+    background: #007bff;
+}
+
+.profile-page .nickname-edit-form button#nicknameSaveBtn:hover {
+    background: #0056b3;
+}
+
+.profile-page .nickname-edit-form .cancel-btn {
+    background: #6c757d;
+}
+
+.profile-page .nickname-edit-form .cancel-btn:hover {
+    background: #545b62;
+}
+
+/* Profile Container */
+.profile-page .profile-container {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.profile-page .profile-content {
+    padding: 20px;
+    background: #fdfdfd;
+}
+
+.profile-page .section-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Forms */
+.profile-page .profile-content input[type="text"],
+.profile-page .profile-content input[type="email"],
+.profile-page .profile-content input[type="password"] {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    padding: 8px;
+    margin: 6px 0 12px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.profile-page .profile-content button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 16px;
+}
+
+.profile-page .profile-content button:hover {
+    background: #0056b3;
+}
+
+.profile-page .logout-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 8px 16px;
+    background: #ff4d4d;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.profile-page .logout-btn:hover {
+    background: #e03e3e;
+}
+
+.profile-page form {
+    margin-bottom: 20px;
+}
+
+.profile-page .profile-content label {
+    font-weight: bold;
+    color: #555;
+}

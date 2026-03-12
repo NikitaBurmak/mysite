@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Services\RegistrationService;
-use App\Services\AnecdoteApiService;
+use App\Services\AnecdoteService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +22,7 @@ class SecurityController extends AbstractController
 {
     public function __construct(
         private RegistrationService $registrationService,
-        private AnecdoteApiService  $anecdoteService
+        private AnecdoteService     $anecdoteService
     )
     {
     }

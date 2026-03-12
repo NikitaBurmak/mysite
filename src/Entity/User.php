@@ -24,6 +24,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: "string")]
     private string $password;
 
+    #[ORM\Column(nullable: true)]
+    private ?string $nickname = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?string $avatarPath = null;
+
     #[ORM\OneToMany(mappedBy: "user", targetEntity: Anecdote::class)]
     private Collection $anecdotes;
 
@@ -102,6 +108,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $anecdote->setUser(null);
             }
         }
+        return $this;
+    }
+
+    public function getNickname(): ?string
+    {
+        return $this->nickname;
+    }
+
+    public function setNickname(?string $nickname): self
+    {
+        $this->nickname = $nickname;
+        return $this;
+    }
+
+    public function getAvatarPath(): ?string
+    {
+        return $this->avatarPath;
+    }
+
+    public function setAvatarPath(?string $avatarPath): self
+    {
+        $this->avatarPath = $avatarPath;
         return $this;
     }
 }

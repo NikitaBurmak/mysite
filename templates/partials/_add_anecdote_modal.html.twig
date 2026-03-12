@@ -1,27 +1,23 @@
 <div id="addAnecdoteModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-
-        <form id="addAnecdoteForm" data-url="{{ path('anecdote_add') }}">
-            <textarea name="text"
-                      placeholder="Ваш анекдот"
-                      required></textarea>
+        <form id="addAnecdoteForm" data-url="{{ path('api_anecdotes_create') }}">
+            <textarea name="text" placeholder="Ваш анекдот" required></textarea>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('add_anecdote') }}">
-            {% if currentTopicId|default(null) is null %}
-                <select name="topic_id" required>
-                    <option value="">All Topics</option>
+
+            <div class="topics-select">
+                <p class="topics-label">Выберите темы:</p>
+                <div class="topics-checkboxes">
                     {% for topic in topics %}
-                        {% if topic.name != 'All Topics' %}
-                            <option value="{{ topic.id }}">{{ topic.name }}</option>
-                        {% endif %}
+                        <label class="topic-checkbox">
+                            <input type="checkbox" name="topicIds[]" value="{{ topic.id }}">
+                            <span>{{ topic.name }}</span>
+                        </label>
                     {% endfor %}
-                </select>
-            {% else %}
-                <input type="hidden" name="topic_id" value="{{ currentTopicId }}">
-            {% endif %}
-            <button type="submit">
-                Добавить
-            </button>
+                </div>
+            </div>
+
+            <button type="submit">Добавить</button>
         </form>
     </div>
 </div>
