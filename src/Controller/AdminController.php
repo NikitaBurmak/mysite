@@ -2,9 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\Anecdote;
-use App\Services\AdminAnecdoteService;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Controller\Trait\AuthenticationTrait;
+use App\Services\AnecdoteService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,9 +12,10 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class AdminController extends AbstractController
 {
+    use AuthenticationTrait;
 
     public function __construct(
-        private AdminAnecdoteService $service,
+        private AnecdoteService $service,
     )
     {
     }
@@ -23,9 +23,9 @@ class AdminController extends AbstractController
     #[Route('/admin', name: 'admin_dashboard')]
     public function dashboard(): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->requireAdmin();
 
-        $anecdotes = $this->service->getAll();
+        $anecdotes = $this->service->getAllAnecdotes();
 
         return $this->render('admin/dashboard.html.twig', compact('anecdotes'));
     }
@@ -33,7 +33,8 @@ class AdminController extends AbstractController
     #[Route('/admin/anecdote/save', name: 'admin_anecdote_save', methods: ['POST'])]
     public function save(Request $request): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->requireAdmin();
+
         try {
             $this->service->updateText(
                 (int)$request->request->get('id'),
@@ -41,15 +42,14 @@ class AdminController extends AbstractController
             );
             return $this->json(['success' => true]);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()
-            ]);
+            return $this->json(['success' => false, 'error' => $e->getMessage()]);
         }
     }
 
     #[Route('/admin/anecdote/delete/{id}', name: 'admin_anecdote_delete', methods: ['POST'])]
     public function delete(int $id): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->requireAdmin();
 
         try {
             $this->service->delete($id);

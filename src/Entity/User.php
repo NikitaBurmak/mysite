@@ -30,7 +30,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?string $avatarPath = null;
 
-    #[ORM\OneToMany(mappedBy: "user", targetEntity: Anecdote::class)]
+    #[ORM\OneToMany(targetEntity: Anecdote::class, mappedBy: "user")]
     private Collection $anecdotes;
 
     public function __construct()
