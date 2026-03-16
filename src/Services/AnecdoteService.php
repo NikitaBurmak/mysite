@@ -69,4 +69,36 @@ class AnecdoteService
     {
         return $this->getAnecdotes();
     }
+
+    // ===== Методы для админ-панели =====
+
+    /**
+     * Обновить текст анекдота (админ)
+     */
+    public function updateText(int $id, string $text): void
+    {
+        $anecdote = $this->em->getRepository(Anecdote::class)->find($id);
+
+        if (!$anecdote) {
+            throw new \Exception('Anecdote not found');
+        }
+
+        $anecdote->setText($text);
+        $this->em->flush();
+    }
+
+    /**
+     * Удалить анекдот (админ)
+     */
+    public function delete(int $id): void
+    {
+        $anecdote = $this->em->getRepository(Anecdote::class)->find($id);
+
+        if (!$anecdote) {
+            throw new \Exception('Anecdote not found');
+        }
+
+        $this->em->remove($anecdote);
+        $this->em->flush();
+    }
 }

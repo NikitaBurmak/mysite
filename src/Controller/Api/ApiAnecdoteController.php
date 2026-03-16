@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Controller\Trait\AuthenticationTrait;
 use App\Services\AnecdoteService;
 use App\Services\RabbitMQ\AnecdotePublisherService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -12,6 +13,8 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api')]
 class ApiAnecdoteController extends AbstractController
 {
+    use AuthenticationTrait;
+
     public function __construct(
         private AnecdoteService $anecdoteService
     ) {}
@@ -35,11 +38,7 @@ class ApiAnecdoteController extends AbstractController
     #[Route('/anecdotes', name: 'api_anecdotes_create', methods: ['POST'])]
     public function create(Request $request, AnecdotePublisherService $publisher): JsonResponse
     {
-        $user = $this->getUser();
-
-        if (!$user) {
-            return $this->json(['success' => false, 'error' => 'Unauthorized'], 401);
-        }
+        $this->requireAuth();
 
         $topicIds = [];
 
@@ -57,7 +56,7 @@ class ApiAnecdoteController extends AbstractController
             return $this->json(['success' => false, 'error' => 'Missing text'], 400);
         }
 
-        $publisher->publish($text, $user->getId(), $topicIds);
+        $publisher->publish($text, $this->getUser()->getId(), $topicIds);
 
         return $this->json(['success' => true, 'message' => 'Anecdote sent to queue']);
     }

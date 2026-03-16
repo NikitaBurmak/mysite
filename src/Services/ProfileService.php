@@ -86,13 +86,49 @@ class ProfileService
             return ['error' => 'Файл не загружен'];
         }
 
+        // Проверка MIME типа
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $mimeType = $file->getMimeType();
+
+        if (!in_array($mimeType, $allowedMimes, true)) {
+            return ['error' => 'Недопустимый тип файла. Разрешены: jpg, jpeg, png, gif, webp'];
+        }
+
+        // Проверка размера файла (максимум 2MB = 2097152 байт)
+        $maxSize = 2 * 1024 * 1024; // 2MB
+        $fileSize = $file->getSize();
+
+        if ($fileSize > $maxSize) {
+            return ['error' => 'Файл слишком большой. Максимальный размер: 2MB'];
+        }
+
+        // Проверка размера изображения (опционально)
+        $imageInfo = getimagesize($file->getPathname());
+        if ($imageInfo === false) {
+            return ['error' => 'Недопустимое изображение'];
+        }
+
+        // Ограничение на максимальные размеры изображения
+        $maxWidth = 2000;
+        $maxHeight = 2000;
+        if ($imageInfo[0] > $maxWidth || $imageInfo[1] > $maxHeight) {
+            return ['error' => 'Слишком большое разрешение изображения. Максимум: 2000x2000'];
+        }
+
         $uploadDir = $this->projectDir . '/public/uploads/avatars';
 
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
-        $extension = $file->getClientOriginalExtension() ?: 'png';
+        // Безопасное получение расширения
+        $extension = $file->guessExtension() ?: 'png';
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        if (!in_array($extension, $allowedExtensions, true)) {
+            $extension = 'png';
+        }
+
         $fileName = uniqid() . '.' . $extension;
         $file->move($uploadDir, $fileName);
 

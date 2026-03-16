@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Exception\InvalidEmailException;
+use App\Exception\InvalidPasswordException;
 use App\Services\RegistrationService;
 use App\Services\AnecdoteService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -43,6 +45,12 @@ class SecurityController extends AbstractController
         ]);
     }
 
+    #[Route('/login', name: 'app_login', methods: ['GET'])]
+    public function loginPage(): Response
+    {
+        return $this->redirectToRoute('home');
+    }
+
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
@@ -53,15 +61,23 @@ class SecurityController extends AbstractController
             $redirect = in_array('ROLE_ADMIN', $user['roles'], true) ? '/admin' : '/';
 
             return $this->json(['success' => true, 'user' => $user, 'redirect' => $redirect]);
-        } catch (\Exception) {
-            return $this->json(['success' => false, 'error' => 'Неверный логин'], 401);
+        } catch (InvalidEmailException|InvalidPasswordException $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => 'Ошибка аутентификации'], 401);
         }
     }
 
     #[Route('/register', name: 'app_register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
-        return $this->registrationService->register($request);
+        $result = $this->registrationService->register($request);
+
+        if ($result['success'] ?? false) {
+            return $this->json($result);
+        }
+
+        return $this->json($result, 400);
     }
 
     #[Route('/api/current_user', name: 'api_current_user')]

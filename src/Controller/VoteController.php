@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Controller\Trait\AuthenticationTrait;
 use App\Entity\Anecdote;
 use App\Entity\User;
 use App\Services\VoteService;
@@ -11,6 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class VoteController extends AbstractController
 {
+    use AuthenticationTrait;
+
     public function __construct(private VoteService $voteService)
     {
     }
@@ -18,9 +21,9 @@ class VoteController extends AbstractController
     #[Route('/anecdote/{id}/like', name: 'anecdote_like', methods: ['POST'])]
     public function like(Anecdote $anecdote): JsonResponse
     {
-        $user = $this->getUser();
+        $user = $this->getAppUser();
 
-        if (!$user instanceof User) {
+        if (!$user) {
             return $this->json(['requireLogin' => true], 401);
         }
 

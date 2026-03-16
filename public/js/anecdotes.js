@@ -13,15 +13,11 @@ export async function initAnecdotes() {
             if (topicIds.length > 0) {
                 const params = topicIds.map(id => `topics[]=${id}`).join('&');
                 url = `/api/anecdotes?${params}`;
-                console.log('Loading anecdotes from:', url);
-            } else {
-                console.log('Loading all anecdotes');
             }
 
             const res = await fetch(url, {credentials: 'same-origin'});
 
             const text = await res.text();
-            console.log('Response:', text);
 
             let anecdotes;
             try {
@@ -43,18 +39,28 @@ export async function initAnecdotes() {
 
             anecdotes.forEach(a => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-6 py-4">${a.id}</td>
-                    <td class="px-6 py-4">${a.text}</td>
-                    <td class="px-6 py-4">
-                        <button type="button"
-                                class="like-button px-3 py-1 rounded transition ${window.IS_LOGGED_IN ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-400 text-white cursor-not-allowed show-login'}"
-                                data-id="${a.id}"
-                                data-count="${a.votesSum}">
-                            ❤️ ${a.votesSum}
-                        </button>
-                    </td>
-                `;
+
+                const idCell = document.createElement('td');
+                idCell.className = 'px-6 py-4';
+                idCell.textContent = a.id;
+
+                const textCell = document.createElement('td');
+                textCell.className = 'px-6 py-4';
+                textCell.textContent = a.text;
+
+                const actionsCell = document.createElement('td');
+                actionsCell.className = 'px-6 py-4';
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'like-button px-3 py-1 rounded transition ' + (window.IS_LOGGED_IN ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-400 text-white cursor-not-allowed show-login');
+                button.dataset.id = a.id;
+                button.dataset.count = a.votesSum;
+                button.textContent = '❤️ ' + a.votesSum;
+                actionsCell.appendChild(button);
+
+                tr.appendChild(idCell);
+                tr.appendChild(textCell);
+                tr.appendChild(actionsCell);
                 tableBody.appendChild(tr);
             });
 
