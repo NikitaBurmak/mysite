@@ -33,4 +33,14 @@ git clone https://github.com/NikitaBurmak/mysite
 cd mysite
 docker-compose up --build
 
+## Screenshots
+
+### Main Page
+![Main Page](README-assets/main-page.png)
+
+### Admin Panel
+![Admin Panel](README-assets/admin-panel.png)
+
+### Profile Page
+![Profile Page](README-assets/profile.png)
 
