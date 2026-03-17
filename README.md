@@ -26,13 +26,6 @@ A full-featured web application for managing and viewing anecdotes.
 - Docker environment setup
 - Clean architecture and service layer separation
 
-## 🚀 Run with Docker
-
-```bash
-git clone https://github.com/NikitaBurmak/mysite
-cd mysite
-docker-compose up --build
-
 ## Screenshots
 
 ### Main Page
@@ -43,4 +36,13 @@ docker-compose up --build
 
 ### Profile Page
 ![Profile Page](README-assets/profile.png)
+
+## 🚀 Run with Docker
+
+```bash
+git clone https://github.com/NikitaBurmak/mysite
+cd mysite
+docker-compose up --build
+
+
 
